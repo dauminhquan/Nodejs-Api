@@ -1,7 +1,7 @@
 var express = require('express');
 var router = express.Router();
 var phantom = require('phantom');
-var moduleFacebookAuto = require('./../modules')
+var moduleFacebookAuto = require('../modules/index')
 /* GET home page. */
 
 
