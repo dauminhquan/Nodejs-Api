@@ -94,8 +94,6 @@ router.get('/post-status', async function(req, res, next) {
         });
     }
     res.send("Thành công")
-
-
 });
 
 router.get('/add-friend',function (req,res,next) {

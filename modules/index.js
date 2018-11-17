@@ -11,7 +11,7 @@ module.exports = {
     },
     postStatus:  async function(page){
         await page.evaluate(function () {
-            document.querySelector("[name='xc_message']").value = "Hello----------"+ (new Date()).getTime().toString()
+            document.querySelector("[name='xc_message']").value = "Đăng status vào lúc----------"+(new Date()).toString()+"...."+ (new Date()).getTime().toString()
             document.querySelector("[name='view_post']").click()
         })
     },
