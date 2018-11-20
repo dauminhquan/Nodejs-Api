@@ -2,6 +2,8 @@ var express = require('express');
 var router = express.Router();
 const User = require('../../model/User')
 const { check, validationResult } = require('express-validator/check');
+const fs = require("fs");
+const csv = require('fast-csv')
 router.post('/profile',(req,res,next) => {
     let user = req.user
     return res.json(user)
@@ -29,6 +31,19 @@ router.get('/accounts/:_id',(req,res,next) =>{
     })
     return res.json(data)
 })
+router.delete('/accounts/:_id',(req,res,next) =>{
+    let user = req.user
+    user.accounts = user.accounts.filter(account => {
+        return !account._id.equals(req.params._id)
+    })
+    user.save((err,user) => {
+        if(err)
+        {
+            return res.status(406).j(err)
+        }
+        return res.json(user.accounts)
+    })
+})
 router.post('/accounts',[
     check('email').isEmail(),
     check('password').isAlphanumeric(),
@@ -52,5 +67,35 @@ router.post('/accounts',[
             password: req.body.password
         })
     })
+})
+router.post('/accounts/upload-csv',function (req,res,next) {
+
+    if (req.files) {
+        let file = req.files.csvFile
+        let fileName = new Date().getMilliseconds().toString()
+        file.mv('./'+fileName,function(err){
+            const stream = fs.createReadStream('./'+fileName)
+            const streamCsv = csv({
+                headers: true,
+                delimiter:',',
+                quote: '"'
+            }).on('data',data => {
+                console.log(data)
+            }).on('end',() => {
+                console.log('end')
+                fs.unlink('./'+fileName,function (err) {
+                    if(err)
+                    {
+                        console.log(err)
+                    }
+                })
+            })
+            stream.pipe(streamCsv)
+        })
+
+    }
+    return res.status(406).json({
+        message : 'Hey, first would you select a file?'
+    });
 })
 module.exports = router;

@@ -6,6 +6,7 @@ modules.init = app => {
     const bodyParser = require('body-parser');
     const express = require('express');
     const cors = require('cors')
+    const fileUpload = require('express-fileupload');
     app.set('views', path.join(__dirname, '../views'));
     app.set('view engine', 'ejs');
     app.use(logger('dev'));
@@ -15,6 +16,7 @@ modules.init = app => {
     app.use(express.static(path.join(__dirname, '../public')));
     app.use(bodyParser.json());
     app.use(bodyParser.urlencoded({ extended: true }));
+    app.use(fileUpload());
     var whitelist = ['http://localhost:8080']
     var openUrl = ['/login','/users/registration','/companies/registration']
     var corsOptions = {
