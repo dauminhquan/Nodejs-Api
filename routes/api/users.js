@@ -69,7 +69,6 @@ router.post('/accounts',[
     })
 })
 router.post('/accounts/upload-csv',function (req,res,next) {
-
     if (req.files) {
         let file = req.files.csvFile
         let fileName = new Date().getMilliseconds().toString()
@@ -82,20 +81,21 @@ router.post('/accounts/upload-csv',function (req,res,next) {
             }).on('data',data => {
                 console.log(data)
             }).on('end',() => {
-                console.log('end')
                 fs.unlink('./'+fileName,function (err) {
                     if(err)
                     {
                         console.log(err)
+                        return res.status(500).json(err)
                     }
+                    return res.json({
+                        message: 'success'
+                    })
                 })
+            }).on('error',(err) => {
+                return res.status(500).json(err)
             })
             stream.pipe(streamCsv)
         })
-
     }
-    return res.status(406).json({
-        message : 'Hey, first would you select a file?'
-    });
 })
 module.exports = router;
