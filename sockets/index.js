@@ -34,8 +34,49 @@ sockets.init = server => {
                     }
                     let accounts = user.accounts
                     accounts.forEach(account => {
-                        socket.on("post-status-"+account._id,() => {
-                            console.log("đang online account: "+account.email)
+                        socket.on("post-status-"+account._id,(data) => {
+                            if(data.message == "" || data.message.replace(/\s/g,"").length == 0 || data.message.length == 0 || data.message == undefined || data.message == null)
+                            {
+                                socket.emit('error-'+account._id,{
+                                    message: "Status không được để trống"
+                                })
+                            }else{
+                                console.log("đang online account: "+account.email)
+                                phantom.create(['--ignore-ssl-errors=yes','--load-images=no']).then(async function(ph) {
+                                    await ph.createPage().then(async function(page) {
+                                        socket.emit('action-'+account._id,{
+                                            message: "Đã khởi tạo trình duyệt"
+                                        })
+                                        await page.on('onConsoleMessage',  async function(msg, lineNum, sourceId) {
+                                            console.log('CONSOLE: ' + msg + ' (from line #' + lineNum + ' in "' + sourceId + '")');
+                                        });
+                                        await page.open('https://mbasic.facebook.com')
+                                        setTimeout(async function () {
+                                            await moduleFacebookAuto.goToLogin(page,account.email,account.password)
+                                            setTimeout(async function () {
+                                                socket.emit('action-'+account._id,{
+                                                    message: "Đã login thành công - Đang chuyển đến trang Home",
+                                                })
+                                                await moduleFacebookAuto.goToHome(page)
+                                                setTimeout(function () {
+                                                    socket.emit('action-'+account._id,{
+                                                        message: "Chuyển đến trang Home thành công",
+                                                    })
+                                                    moduleFacebookAuto.postStatus(page,data.message)
+                                                    setTimeout(function () {
+                                                        socket.emit('action-'+account._id,{
+                                                            message: "Đăng status thành công!",
+                                                        })
+                                                    },3000)
+                                                },3000)
+                                            },3000)
+                                        },3000)
+                                    })
+                                });
+                            }
+
+                        })
+                        socket.on("update-friend-"+account._id,(data) => {
                             phantom.create(['--ignore-ssl-errors=yes','--load-images=no']).then(async function(ph) {
                                 await ph.createPage().then(async function(page) {
                                     socket.emit('action-'+account._id,{
@@ -56,11 +97,14 @@ sockets.init = server => {
                                                 socket.emit('action-'+account._id,{
                                                     message: "Chuyển đến trang Home thành công",
                                                 })
-                                                moduleFacebookAuto.postStatus(page,"xin chào")
+                                                moduleFacebookAuto.goToFriendPage(page)
                                                 setTimeout(function () {
-                                                    socket.emit('action-'+account._id,{
-                                                        message: "Đăng status thành công!",
-                                                    })
+                                                    moduleFacebookAuto.updateListFriend(page)
+                                                    setTimeout(function () {
+                                                        socket.emit('action-'+account._id,{
+                                                            message: "Đăng status thành công!",
+                                                        })
+                                                    },3000)
                                                 },3000)
                                             },3000)
                                         },3000)

@@ -69,6 +69,7 @@ router.post('/accounts',[
     })
 })
 router.post('/accounts/upload-csv',function (req,res,next) {
+    let user = req.user
     if (req.files) {
         let file = req.files.csvFile
         let fileName = new Date().getMilliseconds().toString()
@@ -79,7 +80,7 @@ router.post('/accounts/upload-csv',function (req,res,next) {
                 delimiter:',',
                 quote: '"'
             }).on('data',data => {
-                console.log(data)
+                user.accounts = user.accounts.concat(data)
             }).on('end',() => {
                 fs.unlink('./'+fileName,function (err) {
                     if(err)
@@ -87,9 +88,17 @@ router.post('/accounts/upload-csv',function (req,res,next) {
                         console.log(err)
                         return res.status(500).json(err)
                     }
-                    return res.json({
-                        message: 'success'
+                    user.save(error => {
+                        if(error)
+                        {
+                            console.log(error)
+                            return res.status(500).json(err)
+                        }
+                        return res.json({
+                            message: 'success'
+                        })
                     })
+
                 })
             }).on('error',(err) => {
                 return res.status(500).json(err)
@@ -97,5 +106,26 @@ router.post('/accounts/upload-csv',function (req,res,next) {
             stream.pipe(streamCsv)
         })
     }
+})
+router.post('/accounts/deletes',(req,res,next) => {
+    let user = req.user
+    let ids = req.body.data
+    user.accounts = user.accounts.filter(account => {
+        return !ids.some(function (item) {
+            return account._id.equals(item)
+        })
+    })
+    user.save(error => {
+        if(error)
+        {
+            return res.status(500).json({
+                error: error
+            })
+        }
+        return res.json({
+            message: "success"
+        })
+    })
+
 })
 module.exports = router;

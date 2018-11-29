@@ -9,7 +9,7 @@ module.exports = {
     },
     postStatus:  async function(page,status){
         await page.evaluate(function (status) {
-            document.querySelector("[name='xc_message']").value = "Xin chào các bạn ----------"+(new Date()).toString()+"...."+ (new Date()).getTime().toString()
+            document.querySelector("[name='xc_message']").value = status
             document.querySelector("[name='view_post']").click()
         },status)
     },
@@ -52,5 +52,18 @@ module.exports = {
                 // page.open("https://mbasic.facebook.com"+nodesData[i].href)
             }
         });
+    },
+    goToFriendPage: async function(page){
+        await page.open(`https://mbasic.facebook.com/profile.php?v=friends`);
+    },
+    updateListFriend: async function(page){
+        await page.evaluate(function (user,password) {
+            let friends = document.getElementsByClassName('cd')
+            
+            document.getElementById('m_more_friends')
+            document.querySelector("[name='email']").value = user;
+            document.querySelector("[name='pass']").value = password;
+            document.querySelector("[name='login']").click()
+        },user,password);
     }
 }
